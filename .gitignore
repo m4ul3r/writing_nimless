@@ -1,0 +1,9 @@
+# executables
+*.exe
+
+# cache 
+cache
+
+# shellcodes
+*.sc
+*.rc
