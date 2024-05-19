@@ -9,7 +9,7 @@ Talk that was given at BSIDESKC 2024 about how to write Nim code without the Nim
 
 ### Post-Talk Updates
 
-* [0x11 - simple_instance](./0x11 - simple_instance/) - Creating an instance to reuse function pointers and store global information while the program is running.
+* [0x11 - simple_instance](https://github.com/m4ul3r/writing_nimless/tree/main/src/0x11%20-%20simple_instance) - Creating an instance to reuse function pointers and store global information while the program is running.
 
 ### Future Plans
 
