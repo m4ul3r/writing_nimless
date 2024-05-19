@@ -4,9 +4,17 @@ Talk that was given at BSIDESKC 2024 about how to write Nim code without the Nim
 
 ### Talk
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=EXX3HmCG3pw" target="_blank">
- <img src="https://i.ytimg.com/vi/EXX3HmCG3pw/hqdefault.jpg?sqp=-oaymwEcCNACELwBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLDuNaFoUdWBXPMUe9KbvO-GdZhJdg" alt="Watch the video" width="1280" height="720" border="10" />
+ <img src="https://i.ytimg.com/vi/EXX3HmCG3pw/hqdefault.jpg?sqp=-oaymwEcCNACELwBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLDuNaFoUdWBXPMUe9KbvO-GdZhJdg" alt="Watch the video" width="840" height="470" border="10" />
 </a>
 
-### Related Talk
+### Post-Talk Updates
 
-[nim_for_hackers2](https://github.com/us-cyber-team/nim_for_hackers2)
+* [0x11 - simple_instance](./0x11 - simple_instance/) - Creating an instance to reuse function pointers and store global information while the program is running.
+
+### Future Plans
+
+- [ ] Create a lib folder for a finalized, easy to use library.
+- [ ] ?
+
+### Related Talk
+* [nim_for_hackers2](https://github.com/us-cyber-team/nim_for_hackers2)
