@@ -1,0 +1,10 @@
+proc nothing1*() {.exportc: "__imp___acrt_iob_func".} = discard
+proc nothing2*() {.exportc: "fwrite".} = discard
+proc nothing3*() {.exportc: "fflush".} = discard
+proc nothing4*() {.exportc: "exit".} = discard
+proc nothing5*() {.exportc: "__imp_VirtualAlloc".} = discard
+proc nothing6*() {.exportc: "_setjmp".} = discard
+proc nothing7*() {.exportc: "signal".} = discard
+proc nothing8*() {.exportc: "__imp__fileno".} = discard
+proc nothing9*() {.exportc: "__imp__setmode".} = discard
+proc nothing10*() {.exportc: "__imp_longjmp".} = discard
