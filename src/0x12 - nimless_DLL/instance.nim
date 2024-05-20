@@ -7,6 +7,7 @@ type
   MODULES* {.pure.} = object
     advapi32*: HMODULE
     kernel32*: HMODULE
+    ntdll*:    HMODULE
     user32*:   HMODULE
     ws2_32*:   HMODULE
 
@@ -44,8 +45,12 @@ type
     # Advapi32.DLL
     GetUserNameA*:                type(GetUserNameA)
 
+    # NTDLL
+    NtQuerySystemInformation*:    type(NtQuerySystemInformation)
+
     # USER32.DLL
     MessageBoxA*:                 type(MessageBoxA)
+    MessageBoxW*:                 type(MessageBoxW)
     wsprintfA*:                   type(winuser.wsprintfA)
 
     # ws2_32.dll
@@ -138,25 +143,22 @@ proc init*(ninst: var NIMLESS_INSTANCE): bool =
     getFuncPtr(ninst.Module.kernel32, ninst.Win32.WriteProcessMemory)
   else: return false
 
+  # Load NTDLL.DLL
+  var ntdll {.stackStringA.} = "ntdll"
+  ninst.Module.ntdll = ninst.Win32.LoadLibraryA(cast[cstring](ntdll[0].addr))
+  if ninst.Module.ntdll != 0:
+    getFuncPtr(ninst.Module.ntdll, ninst.Win32.NtQuerySystemInformation)
+  else: return false
+
+
   # Load USER32.dll
   var user32 {.stackStringA.} = "user32.dll"
   ninst.Module.user32 = ninst.Win32.LoadLibraryA(cast[cstring](user32[0].addr))
   if ninst.Module.user32 != 0:
     getFuncPtr(ninst.Module.user32, ninst.Win32.MessageBoxA)
+    getFuncPtr(ninst.Module.user32, ninst.Win32.MessageBoxW)
     getFuncPtr(ninst.Module.user32, ninst.Win32.wsprintfA)
   else: return false
-
-  # # Load ws_32.dll
-  # var ws2_32 {.stackStringA.} = "ws2_32.dll"
-  # ninst.Module.ws2_32= ninst.Win32.LoadLibraryA(cast[cstring](ws2_32[0].addr))
-  # if ninst.Module.user32 != 0:
-  #   getFuncPtr(ninst.Module.ws2_32, ninst.Win32.WSASocketA)
-  #   getFuncPtr(ninst.Module.ws2_32, ninst.Win32.WSAStartup)
-  #   getFuncPtr(ninst.Module.ws2_32, ninst.Win32.inet_addr)
-  #   getFuncPtr(ninst.Module.ws2_32, ninst.Win32.htons)
-  #   getFuncPtr(ninst.Module.ws2_32, ninst.Win32.connect)
-  # else: return false
-
 
 
 

