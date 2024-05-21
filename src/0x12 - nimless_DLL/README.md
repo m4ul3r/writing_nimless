@@ -111,6 +111,8 @@ Mode                 LastWriteTime         Length Name
 -a----         5/19/2024   7:53 PM           5120 main.dll
 ```
 
+Later we can see how this can be automated..
+
 ### Thread pool injection example (exe loader)
 
 Porting over the [Nim PoolParty](https://github.com/m4ul3r/malware/tree/main/nim/thread_pool_injection) is relatively straight forward. 
@@ -210,7 +212,37 @@ proc DllMain(hinstDLL: HINSTANCE, fdwReason: DWORD, lpvReason: LPVOID): BOOL {.s
   return true
 ```
 
-A simple quick test for this can be done with `rundll32.exe ./dll_main.dll,test`; the test function does not exist, but it will trigger since the DLL is being loaded.
+A simple quick test for this can be done with `rundll32.exe ./dll_main.dll,test`; the test function does not exist, but it will trigger since the DLL is being loaded. To automate the building of the DLL, we can tell ChatGPt to do it for us and we get this:
+
+```bat
+nim c --genscript .\dll_main.nim
+
+cd .\cache\dll_main
+
+set inputFile="@mdll_main.nim.c"
+set tempFile=%inputFile%.tmp
+
+powershell -Command ^
+    "$inputFile = '%inputFile%';" ^
+    "$tempFile = '%tempFile%';" ^
+    "$pattern = 'N_LIB_PRIVATE void PreMainInner(void) {';" ^
+    "$found = $false;" ^
+    "Get-Content -Path $inputFile | ForEach-Object { if (-not $found) { if ($_ -match [regex]::Escape($pattern)) { $found = $true } else { $_ } } } | Set-Content -Path $tempFile;" ^
+    "Remove-Item -Path $inputFile;" ^
+    "Rename-Item -Path $tempFile -NewName $inputFile;"
+
+REM Check if the process was successful
+if exist "%inputFile%" (
+    echo File has been processed successfully.
+) else (
+    echo There was an error processing the file.
+)
+
+call compile_dll_main.bat
+cd ..\..
+
+move .\cache\dll_main\dll_main.dll .\dll_main.dll
+```
 
 
 ### Notes

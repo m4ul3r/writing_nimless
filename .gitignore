@@ -10,3 +10,6 @@ cache
 # shellcodes
 *.sc
 *.rc
+
+# tmp workspace
+tmp
