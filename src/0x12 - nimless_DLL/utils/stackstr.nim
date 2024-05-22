@@ -1,12 +1,29 @@
-import std/[macros]
+import std/[macros, random]
+
+from std/parseutils import parseInt
+
+proc genRandomSeed(): Rand {.compileTime.} =
+  var seed: int
+  when system.hostOS == "windows":
+    discard parseInt(staticExec("powershell.exe Get-Random -Maximum 99999999 -Minimum 0"), seed, 0)
+  else:
+    discard parseInt(staticExec("bash -c 'echo $SRANDOM'"), seed, 0)
+  result = initRand(seed)
 
 proc assignChars(smt: NimNode, varName: NimNode, varValue: string, wide: bool) {.compileTime.} =
+  var rng = genRandomSeed()
   var
     asnNode:        NimNode
     bracketExpr:    NimNode
     dotExpr:        NimNode
     castIdent:      NimNode
+    tmpSeq = newSeq[int]()
+  
   for i in 0 ..< varValue.len():
+    tmpSeq.add(i)
+  rng.shuffle(tmpSeq)
+
+  for i in tmpSeq:
     asnNode     = newNimNode(nnkAsgn)
     bracketExpr = newNimNode(nnkBracketExpr)
     dotExpr     = newNimNode(nnkDotExpr)
