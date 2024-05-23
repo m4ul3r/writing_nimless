@@ -1,9 +1,15 @@
 # executables
 *.exe
 
+# dlls
+*.dll
+
 # cache 
 cache
 
 # shellcodes
 *.sc
 *.rc
+
+# tmp workspace
+tmp
