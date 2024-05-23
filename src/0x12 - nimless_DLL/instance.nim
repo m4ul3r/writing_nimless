@@ -6,6 +6,7 @@ import utils/[gpa, gmh, hash, stackstr]
 type
   MODULES* {.pure.} = object
     advapi32*: HMODULE
+    bcrypt*:   HMODULE
     kernel32*: HMODULE
     ntdll*:    HMODULE
     user32*:   HMODULE
@@ -59,12 +60,22 @@ type
     inet_addr*:                   type(inet_addr)
     htons*:                       type(htons)
     connect*:                     type(connect)
+  
+  BCRYPT* = object
+    BCryptOpenAlgorithmProvider*:   type(BCryptOpenAlgorithmProvider)
+    BCryptGetProperty*:             type(BCryptGetProperty)
+    BCryptSetProperty*:             type(BCryptSetProperty)
+    BCryptGenerateSymmetricKey*:    type(BCryptGenerateSymmetricKey)
+    BCryptDecrypt*:                 type(BCryptDecrypt)
+    BCryptDestroyKey*:              type(BCryptDestroyKey)
+    BCryptCloseAlgorithmProvider*:  type(BCryptCloseAlgorithmProvider)
 
 
   
   NIMLESS_INSTANCE* {.pure.} = object
     Module*: MODULES
     Win32*: WIN32
+    Bcrypt*: BCRYPT
     IsInitialized*: bool
 
 #[ Global Instance ]#
@@ -150,6 +161,18 @@ proc init*(ninst: var NIMLESS_INSTANCE): bool =
     getFuncPtr(ninst.Module.ntdll, ninst.Win32.NtQuerySystemInformation)
   else: return false
 
+   # Load BCRYPT.DLL
+  var bcrypt {.stackStringA.} = "bcrypt"
+  ninst.Module.bcrypt = ninst.Win32.LoadLibraryA(cast[cstring](bcrypt[0].addr))
+  if ninst.Module.bcrypt != 0:
+    getFuncPtr(ninst.Module.bcrypt, ninst.Bcrypt.BCryptOpenAlgorithmProvider)
+    getFuncPtr(ninst.Module.bcrypt, ninst.Bcrypt.BCryptGetProperty)
+    getFuncPtr(ninst.Module.bcrypt, ninst.Bcrypt.BCryptSetProperty)
+    getFuncPtr(ninst.Module.bcrypt, ninst.Bcrypt.BCryptGenerateSymmetricKey)
+    getFuncPtr(ninst.Module.bcrypt, ninst.Bcrypt.BCryptDecrypt)
+    getFuncPtr(ninst.Module.bcrypt, ninst.Bcrypt.BCryptDestroyKey)
+    getFuncPtr(ninst.Module.bcrypt, ninst.Bcrypt.BCryptCloseAlgorithmProvider)
+  else: return false
 
   # Load USER32.dll
   var user32 {.stackStringA.} = "user32.dll"
