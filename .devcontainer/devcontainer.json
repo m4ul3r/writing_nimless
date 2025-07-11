@@ -1,0 +1,15 @@
+{
+	"name": "Ubuntu",
+	"image": "mcr.microsoft.com/devcontainers/base:noble",
+	"postCreateCommand": "bash .devcontainer/setup.sh",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"nimlang.nim"
+			]
+		}
+	},
+	"remoteEnv": {
+		"PATH": "${containerEnv:PATH}:/home/vscode/.nimble/bin"
+	}
+}
