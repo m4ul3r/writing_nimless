@@ -5,10 +5,11 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"nimlang.nim"
+				"nimlang.nimlang"
 			]
 		}
 	},
+
 	"remoteEnv": {
 		"PATH": "${containerEnv:PATH}:/home/vscode/.nimble/bin"
 	}
