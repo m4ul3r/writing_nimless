@@ -60,7 +60,7 @@ proc getVxTableEntry(pModuleBase: PVOID, pImageExportDirectory: PIMAGE_EXPORT_DI
       var j = 0
       while true:
         # check if syscall, if this case we are too far
-        if (cast[PBYTE](cast[int](pFunctionAddress) + j)[] == 0x0f.byte) and (cast[PBYTE](cast[int](pFunctionAddress) + j)[] == 0x05.byte):
+        if (cast[PBYTE](cast[int](pFunctionAddress) + j)[] == 0x0f.byte) and (cast[PBYTE](cast[int](pFunctionAddress) + j + 1)[] == 0x05.byte):
           testJmpFail(0)
         # check if ret, in this care we are probably too far
         if (cast[PBYTE](cast[int](pFunctionAddress) + j)[] == 0xc3.byte):
